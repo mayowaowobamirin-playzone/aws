@@ -1,0 +1,70 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Deplyed Vpc using atom",
+    "Metadata": {
+
+    },
+    "Parameters": {
+      "MyappVpcCidr": {
+          "Description": "cidr block for Vpc",
+          "Type": "String",
+          "Default": "10.23.0.0/16"
+      },
+      "Subnet1Cidr": {
+          "Description": "chose cidr for subnet1 ",
+          "Type": "String",
+          "Default": "10.23.1.0/24"
+      },
+      "Subnet1Cidr2": {
+          "Description": "chose cidr for subnet1 ",
+          "Type": "String",
+          "Default": "10.23.1.1/24"
+      },
+      "AZs1": {
+          "Description": "subnet 1 AZs",
+          "Type": "AWS::EC2::AvailabilityZone::Name",
+    },
+    "As2": {
+        "Description": "subnet 2 AZs",
+        "Type": "AWS::EC2::AvailabilityZone::Name",
+      },
+    "Mappings": {
+
+    },
+    "Conditions": {
+
+    },
+    "Resources": {
+      "MyappVpc": {
+        "Type": "AWS::EC2::VPC",
+        "Properties": {
+          "CidrBlock":{ "Ref": "MyappVpcCidr" },
+          "InstanceTenancy" : "default",
+          "Tags": { "Key": "Name", "Value":  "MyappVpc" }
+        }
+      },
+      "subnetName1": {
+        "Type": "AWS::EC2::Subnet",
+        "Properties": {
+          "AvailabilityZone":{ "Ref": "AZs1" } ,
+          "VpcId": { "Ref": "MyappVpc" },
+          "CidrBlock": { "Ref": "Subnet1Cidr" },
+          "Tags": { "Key": "name", "Value":"testing" }
+        }
+      },
+      "subnetName2": {
+        "Type": "AWS::EC2::Subnet",
+        "Properties": {
+          "AvailabilityZone":{ "Ref": "AZs2" } ,
+          "VpcId": { "Ref": "MyappVpc" },
+          "CidrBlock": { "Ref": "Subnet2Cidr2" },
+          "Tags": { "Key": "name", "Value":"testing" }
+        }
+
+    }
+  },
+
+    "Outputs": {
+
+    }
+}

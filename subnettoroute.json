@@ -1,0 +1,269 @@
+{
+	"AWSTemplateFormatVersion": "2010-09-09",
+	"Description": "Deplyed Vpc using atom",
+	"Metadata": {
+
+	},
+	"Parameters": {
+		"MyappVpcCidr": {
+			"Description": "cidr block for Vpc",
+			"Type": "String",
+			"Default": "10.23.0.0/16"
+		},
+		"Subnet1Cidr": {
+			"Description": "chose cidr for subnet1 ",
+			"Type": "String",
+			"Default": "10.23.1.0/24"
+		},
+		"Subnet1Cidr2": {
+			"Description": "chose cidr for subnet1 ",
+			"Type": "String",
+			"Default": "10.23.1.1/24"
+		},
+		"AZs1": {
+			"Description": "subnet 1 AZs",
+			"Type": "AWS::EC2::AvailabilityZone::Name"
+		},
+		"webserverKeyname": {
+			"Description": "choose key name",
+			"Type": "AWS::EC2::KeyPair::KeyName"
+
+		},
+
+		"webserverInstanceType": {
+			"Description": "ec2 type",
+			"Type": "String",
+			"Default": "t2.micro"
+		},
+		"InstanceImageID": {
+			"Description": "Add AMI for webserver",
+			"Type": "String"
+
+		},
+	"As2": {
+		"Description": "subnet 2 AZs",
+		"Type": "AWS::EC2::AvailabilityZone::Name"
+	}
+},
+	"Mappings": {"RegionMap": {
+            "us-east-1": {
+              "64": "ami-04681a1dbd79675a5"
+            },
+            "us-east-1": {
+              "key": "ami-0cf31d971a3ca20d6"
+            }
+  }
+
+	},
+	"Conditions": {
+
+	},
+	"Resources": {
+
+		"MyappVpc": {
+			"Type": "AWS::EC2::VPC",
+			"Properties": {
+				"CidrBlock": {
+					"Ref": "MyappVpcCidr"
+				},
+				"InstanceTenancy": "default",
+				"Tags": [{
+					"Key": "Name",
+					"Value": "MyappVpc"
+				}
+      ]
+			}
+		},
+		"subnetName1": {
+			"Type": "AWS::EC2::Subnet",
+			"Properties": {
+				"AvailabilityZone": {
+					"Ref": "AZs1"
+				},
+				"VpcId": {
+					"Ref": "MyappVpc"
+				},
+				"CidrBlock": {
+					"Ref": "Subnet1Cidr"
+				},
+				"Tags": [{
+					"Key": "name",
+					"Value": "testing"
+				}
+      ]
+			}
+		},
+		"subnetName2": {
+			"Type": "AWS::EC2::Subnet",
+			"Properties": {
+				"AvailabilityZone": {
+					"Ref": "As2"
+				},
+				"VpcId": {
+					"Ref": "MyappVpc"
+				},
+				"CidrBlock": {
+					"Ref": "Subnet1Cidr2"
+				},
+				"Tags": [{
+					"Key": "name",
+					"Value": "testing"
+				}
+      ]
+			}
+
+		},
+		"MyAppIGW": {
+			"Type": "AWS::EC2::InternetGateway",
+			"Properties": {
+				"Tags": [{
+					"Key": "name",
+					"Value": "myIGW"
+				}
+      ]
+			}
+		},
+		"AttachGateway": {
+			"Type": "AWS::EC2::VPCGatewayAttachment",
+			"Properties": {
+				"VpcId": {
+					"Ref": "MyappVpc"
+				},
+				"InternetGatewayId": {
+					"Ref": "MyAppIGW"
+				}
+			}
+		},
+		"PublicSubnetRT": {
+			"Type": "AWS::EC2::RouteTable",
+			"Properties": {
+				"VpcId": {
+					"Ref": "MyappVpc"
+				},
+				"Tags": [{
+					"Key": "Name",
+					"Value": "PublicRT"
+				}
+      ]
+			}
+		},
+		"routePublic": {
+			"Type": "AWS::EC2::Route",
+			"Properties": {
+				"RouteTableId": {
+					"Ref": "PublicSubnetRT"
+				},
+				"DestinationCidrBlock": "0.0.0.0",
+				"GatewayId": {
+					"Ref": "MyAppIGW"
+				}
+      }
+			},
+
+			"Subnet1": {
+				"Type": "AWS::EC2::SubnetRouteTableAssociation",
+				"Properties": {
+					"SubnetId": "subnet1",
+					"RouteTableId": {
+						"Ref": "PublicSubnetRT"
+					}
+        }
+				},
+
+				"secGroupName": {
+					"Type": "AWS::EC2::SecurityGroup",
+					"Properties": {
+						"GroupDescription": "securitygroup",
+						"SecurityGroupIngress": [ {
+							"IpProtocol": "tcp",
+							"FromPort": "80",
+							"ToPort": "80",
+							"CidrIp": "0.0.0.0/0"
+						}
+          ],
+						"VpcId": {
+							"Ref": "MyappVpc"
+						},
+						"Tags": [ {
+							"Key": "Name",
+							"Value": "SG"
+						}
+          ]
+        }
+			},
+			"ElbsecGroupName": {
+				"Type": "AWS::EC2::SecurityGroup",
+				"Properties": {
+					"GroupDescription": "elbsecuritygroup",
+					"SecurityGroupIngress": [ {
+						"IpProtocol": "tcp",
+						"FromPort": "80",
+						"ToPort": "80",
+						"CidrIp": "0.0.0.0/0"
+					}
+				],
+					"VpcId": {
+						"Ref": "MyappVpc"
+					},
+					"Tags": [ {
+						"Key": "Name",
+						"Value": "SG"
+					}
+				]
+			}
+		},
+
+					"webserver1": {
+						"Type": "AWS::EC2::Instance",
+						"Properties": {
+							"KeyName": {
+								"Ref": "webserverKeyname"
+							},
+							"ImageId": {
+								"Ref": "InstanceImageID"
+							},
+              "SubnetId": {
+                "Ref": "Subnet1"
+              },
+							"InstanceType": {
+								"Ref": "webserverInstanceType"
+							},
+							"Monitoring": "false",
+							"SecurityGroupIds": [{
+								"Ref": "secGroupName"
+							}],
+							"Tags": [{
+								"Key": "Name",
+								"Value": "webserver1"
+							}],
+							"UserData": {
+								"Fn::Base64": {
+									"Fn::Join": [
+										"", [
+											"#!/bin/bash -ex",
+											"-"
+										]
+									]
+								}
+							}
+						}
+					},
+					"MyAppElb": {
+					   "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+					   "Properties": {
+					      "Listeners" : [ - ],
+					      "SecurityGroups" : [ - ],
+					      "Subnets" : [ { "Ref": "PublicSubnetRT" }],
+					      "Tags": [
+					            {
+					              "Key": "-",
+					              "Value": "-"
+					            }
+					      ]
+					   }
+					}
+
+				},
+
+				"Outputs": {}
+			}
